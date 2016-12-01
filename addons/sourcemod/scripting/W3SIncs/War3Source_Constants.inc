@@ -327,7 +327,8 @@ enum W3Buff
   
   fHPRegen, ///float sum! NO NEGATIVES! MINIM regin rate is 0.5 / second ( 1 hp per 2 seconds)
   fHPDecay, //float sum, NO NEGATIVES, postive means lose this much HP / second, same requirements as fHPRegen
-  fHPRegenDeny, //set true to deny hp regen
+  bHPRegenDeny, //43, set true to deny hp regen
+  fHPRegenDeny = 43, //backwards compatibility macro for 'bHPRegenDeny'
   iAdditionalMaxHealth,   ///increase / decrease in maxhp
   
   //44
@@ -353,8 +354,8 @@ enum W3Buff
   fDamageModifier, //Gives a % increase to damage done
 
   iAdditionalMaxHealthNoHPChange,   ///increase / decrease in maxhp. NO AUTOMATIC HP CHANGE WHEN BUFF IS CHANGED
+  bHPDecayDeny, //set true to deny hp decay
   MaxBuffLoopLimitTemp, //this is a variable that is for loops, this number is automatically generated from the enum.
-  
 }
 stock MaxBuffLoopLimit=_:MaxBuffLoopLimitTemp;
 
@@ -507,8 +508,11 @@ stock InitiateBuffPropertiesArray(buffpropertiesarray[W3Buff][W3BuffProperties])
   buffpropertiesarray[ fHPDecay][DefaultValue]=0.0;
   buffpropertiesarray[ fHPDecay][BuffStackType]=fAbsolute;  
   
-  buffpropertiesarray[ fHPRegenDeny][DefaultValue]=false;
-  buffpropertiesarray[ fHPRegenDeny][BuffStackType]=bHasOneTrue;  
+  buffpropertiesarray[ bHPRegenDeny][DefaultValue]=false;
+  buffpropertiesarray[ bHPRegenDeny][BuffStackType]=bHasOneTrue;  
+  
+  buffpropertiesarray[ bHPDecayDeny][DefaultValue]=false;
+  buffpropertiesarray[ bHPDecayDeny][BuffStackType]=bHasOneTrue;  
   
   buffpropertiesarray[ iAdditionalMaxHealth ][DefaultValue]=0;
   buffpropertiesarray[ iAdditionalMaxHealth ][BuffStackType]=iAbsolute;
@@ -546,7 +550,7 @@ stock InitiateBuffPropertiesArray(buffpropertiesarray[W3Buff][W3BuffProperties])
   buffpropertiesarray[ iCritMode ][DefaultValue]=-1;
   buffpropertiesarray[ iCritMode ][BuffStackType]=iLastValue;
   
-  buffpropertiesarray[ fCritModifier ][DefaultValue]=0.0;
+  buffpropertiesarray[ fCritModifier ][DefaultValue]=1.0;
   buffpropertiesarray[ fCritModifier ][BuffStackType]=fAbsolute;
   
   buffpropertiesarray[ iDamageBonus ][DefaultValue]=0;

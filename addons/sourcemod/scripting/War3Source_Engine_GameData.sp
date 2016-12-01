@@ -17,7 +17,7 @@ public bool:InitNativesForwards()
     /* PrepSDKCall_SetAddress is only available in 1.6 and above. */
     MarkNativeAsOptional("PrepSDKCall_SetAddress");
     
-    CreateNative("War3_IsMeleeWeapon", any:Native_War3_IsMeleeWeapon);
+    CreateNative("War3_IsMeleeWeapon", NativeCall:Native_War3_IsMeleeWeapon);
     return true;
 }
 
@@ -104,11 +104,7 @@ public bool:Native_War3_IsMeleeWeapon(Handle:plugin, numParams)
                 GetEdictClassname(ent, sWeaponName, sizeof(sWeaponName));
                 return (StrEqual(sWeaponName, "amerknife") || StrEqual(sWeaponName, "spade") || StrEqual(sWeaponName, "punch"));
             }
-            case Game_L4D:
-            {
-                /* Vacant case to falltrough to L4D2(required by SP). */
-            }
-            case Game_L4D2:
+            case Game_L4D, Game_L4D2:
             {
                 GetEdictClassname(ent, sWeaponName, sizeof(sWeaponName));
                 return StrEqual(sWeaponName, "weapon_melee", false);

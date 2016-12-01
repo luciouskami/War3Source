@@ -16,7 +16,7 @@ public Plugin:myinfo =
     description = "Become immune to headshots"
 };
 
-public OnPluginStart()
+public OnMapStart()
 {
     War3_AddSoundFolder(helmSound0, sizeof(helmSound0), "helm/metal_solid_impact_bullet1.mp3");
     War3_AddSoundFolder(helmSound1, sizeof(helmSound1), "helm/metal_solid_impact_bullet2.mp3");
@@ -52,13 +52,13 @@ public Action:SDK_Forwarded_TraceAttack(victim, &attacker, &inflictor, &Float:da
         damage=0.0;
         new random = GetRandomInt(0,3);
         if(random==0){
-            EmitSoundToAll(helmSound0,victim);
+            EmitSoundToAllAny(helmSound0,victim);
         }else if(random==1){
-            EmitSoundToAll(helmSound1,victim);
+            EmitSoundToAllAny(helmSound1,victim);
         }else if(random==2){
-            EmitSoundToAll(helmSound2,victim);
+            EmitSoundToAllAny(helmSound2,victim);
         }else{
-            EmitSoundToAll(helmSound3,victim);
+            EmitSoundToAllAny(helmSound3,victim);
         }
         if(War3_GetGame()==TF){
             decl Float:pos[3];
@@ -66,6 +66,7 @@ public Action:SDK_Forwarded_TraceAttack(victim, &attacker, &inflictor, &Float:da
             pos[2] += 4.0;
             War3_TF_ParticleToClient(0, "miss_text", pos); //to the attacker at the enemy pos
         }
+        return Plugin_Changed;
     }
-    return Plugin_Changed;
+    return Plugin_Continue;
 }

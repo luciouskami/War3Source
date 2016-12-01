@@ -81,8 +81,8 @@ public OnPluginStart()
 
     hCvarDisableCritWithGloves=CreateConVar("war3_orc_nocritgloves","1","Disable nade crit with gloves");
     
-    MyWeaponsOffset=FindSendPropOffs("CBaseCombatCharacter","m_hMyWeapons");
-    AmmoOffset=FindSendPropOffs("CBasePlayer","m_iAmmo");
+    MyWeaponsOffset=FindSendPropInfo("CBaseCombatCharacter","m_hMyWeapons");
+    AmmoOffset=FindSendPropInfo("CBasePlayer","m_iAmmo");
     CreateTimer(0.1,DeciSecondTimer,_,TIMER_REPEAT);
     
     LoadTranslations("w3s.race.orc.phrases.txt");
@@ -213,7 +213,7 @@ public DoChain(client,Float:distance,dmg,bool:first_call,last_target)
         GetClientEyeAngles(target,vecAngles);
         TE_SetupBloodSprite(target_pos, vecAngles, {200, 20, 20, 255}, 28, BloodSpray, BloodDrop);
         TE_SendToAll();
-        EmitSoundToAll( lightningSound , target,_,SNDLEVEL_TRAIN);
+        EmitSoundToAllAny( lightningSound , target,_,SNDLEVEL_TRAIN);
         new new_dmg=RoundFloat(float(dmg)*0.66);
         
         DoChain(client,distance,new_dmg,false,target);
@@ -384,7 +384,7 @@ public OnWar3EventPostHurt(victim, attacker, Float:damage, const String:weapon[3
         return;
     }
 
-    if(victim>0&&attacker>0&&victim!=attacker)
+    if(victim>0 && attacker>0)
     {
         new race_attacker=War3_GetRace(attacker);
         
@@ -429,7 +429,7 @@ public OnWar3EventPostHurt(victim, attacker, Float:damage, const String:weapon[3
         {
             
             new skill_cg_attacker=War3_GetSkillLevel(attacker,race_attacker,SKILL_NADE_INVIS);
-            if(race_attacker==thisRaceID && skill_cg_attacker>0 && !Hexed(attacker,false))
+            if(race_attacker==thisRaceID && skill_cg_attacker>0 && !Hexed(attacker,false) && GetClientTeam(attacker)!=GetClientTeam(victim))
             {
                 new gloveitem=War3_GetItemIdByShortname("glove");
                 if(GetConVarInt(hCvarDisableCritWithGloves)>0&&gloveitem>0&&War3_GetOwnsItem(attacker,gloveitem)){

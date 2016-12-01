@@ -170,11 +170,6 @@ new TPFailCDResetToSkill[MAXPLAYERSCUSTOM];
 
 public OnUltimateCommand(client,race,bool:pressed)
 {
-    if(RaceDisabled)
-    {
-        return;
-    }
-
     //DP("ult pressed");
     if( pressed  && ValidPlayer(client,true) && !Silenced(client))
     {
@@ -296,8 +291,8 @@ bool:Teleport(client,Float:distance)
         
         
         TeleportEntity(client,emptypos,NULL_VECTOR,NULL_VECTOR);
-        EmitSoundToAll(teleportSound,client);
-        EmitSoundToAll(teleportSound,client);
+        EmitSoundToAllAny(teleportSound,client);
+        EmitSoundToAllAny(teleportSound,client);
         
         
         

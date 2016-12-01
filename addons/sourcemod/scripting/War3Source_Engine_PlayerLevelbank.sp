@@ -8,18 +8,17 @@ public Plugin:myinfo =
     description = "Controls the levelbank"
 };
 
-new levelbank[MAXPLAYERSCUSTOM];
-new Handle:hCvar_NewPlayerLevelbank;
-
-new Handle:hCvarPrintLevelBank;
-new Handle:hLevelup;
+int levelbank[MAXPLAYERSCUSTOM];
+ConVar hCvar_NewPlayerLevelbank;
+ConVar hCvarPrintLevelBank;
+ConVar hLevelup;
 
 public OnPluginStart()
 {
     hCvar_NewPlayerLevelbank=CreateConVar("war3_new_player_levelbank","30","The amount of free levels a person gets that is new to the server (no xp record)");
     W3SetVar(hNewPlayerLevelbankCvar,hCvar_NewPlayerLevelbank);
         
-    hCvarPrintLevelBank=CreateConVar("war3_print_levelbank_spawn","0","Print how much you have in your level bank in chat every time you spawn?");
+    hCvarPrintLevelBank=CreateConVar("war3_print_levelbank_spawn","0","Print how much you have in your level bank in chat every time you spawn (0=never, 1=always, 2=only when levelbank is full");
     hLevelup=CreateConVar("war3_levelbank_method","0","Selects the method the levelbank uses the levelup a player(available: 0=just increase current race level(default) 1=give required XP to levelup)");
 
     RegAdminCmd("war3_addlevelbank",War3Source_CMD_addlevelbank,ADMFLAG_RCON,"Add to user(steamid)'s level bank");
@@ -86,7 +85,7 @@ public OnSelectShowLevelBankMenu(Handle:menu,MenuAction:action,client,selection)
 {
     if(action==MenuAction_Select)
     {
-        if(selection==0){
+        if(selection==0 && W3Denyable(DN_ShowLevelbank,client)){        
             SetTrans(client);
             if(W3GetLevelBank(client)<=0){
                 War3_ChatMessage(client,"%T","You do not have any levels in the level bank",client);
@@ -149,7 +148,7 @@ public Action:War3Source_CMD_addlevelbank(client,args){
         new String:othersteamid[32];
         for(new i=1;i<=MaxClients;i++){
             if(ValidPlayer(i)&&W3IsPlayerXPLoaded(i)){
-                GetClientAuthString(i, othersteamid, sizeof(othersteamid));
+                GetClientAuthId(i, AuthId_Steam2, othersteamid, sizeof(othersteamid));
                 if(StrEqual(steamid,othersteamid,false)){
                     ReplyToCommand(client,"Found client %d in game with steamid %s, giving adding to level bank levels now",i,steamid);
                     ingameoldlevelbank = W3GetLevelBank(i);
@@ -211,8 +210,14 @@ public Action:War3Source_CMD_addlevelbank(client,args){
 }
 
 public OnWar3EventSpawn(client){
-    if(GetConVarInt(hCvarPrintLevelBank)&&W3GetLevelBank(client)>0){
-        War3_ChatMessage(client,"%T","You have {amount} levels in your levelbank, say levelbank to use them",client,W3GetLevelBank(client));
-        
+    int printLevelBankCvar = hCvarPrintLevelBank.IntValue;
+    int levelsInBank = W3GetLevelBank(client);
+    if(printLevelBankCvar > 0 && levelsInBank > 0){
+        if(printLevelBankCvar == 2 && levelsInBank != hCvar_NewPlayerLevelbank.IntValue) {
+            // Player used some levels, no need to show levelbank information to him.
+            return;
+        }
+    
+        War3_ChatMessage(client,"%T","You have {amount} levels in your levelbank, say levelbank to use them",client,levelsInBank);
     }
 }

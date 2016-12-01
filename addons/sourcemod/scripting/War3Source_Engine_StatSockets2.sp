@@ -89,14 +89,17 @@ PrepareSocket(Handle:plugin,SOCKETTYPE:type)
         
         decl String:data[8000];
         data[0]='\0';
-        new Function:func;
+        
+        // note this used to be tagged Function: due to warning 237: coercing functions to and from primitives is unsupported and will be removed in the future
+		// we do not tag it anymore
+        new func;
         if(type==HTTPGET){
             
-            func=Function:GetNativeCell(2); //callback;
+            func=GetNativeCell(2); //callback;
         }
         else if(type==HTTPPOST){
             GetNativeString(2,data,sizeof(data));///ASSUME DATA IS PHP ESCAPED
-            func=Function:GetNativeCell(3); //callback;
+            func=GetNativeCell(3); //callback;
         }
         
         
@@ -111,16 +114,6 @@ PrepareSocket(Handle:plugin,SOCKETTYPE:type)
         SetTrieValue(trie,"plugin", plugin);
         SetTrieString(trie,"response", "RESPONSE:");
         SetTrieValue(trie,"type", type);
-    /*    SetTrieString(trie,"TEST","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST1","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST2","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST11","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST111","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST112","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST11","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST111","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-        SetTrieString(trie,"TEST112","NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN");
-    */    
         if(socketCount<MAXSOCKETS&&backoffcounter==0)
         {
             InitiateSocket(trie);
@@ -259,8 +252,10 @@ public OnSocketDisconnected(Handle:socket, any:trie) {
         War3_LogInfo("Zero length socket return disconnect");
     }
     
-    new Function:func;
-    GetTrieValue(trie,"func",func);
+	// note this used to be tagged Function: due to warning 237: coercing functions to and from primitives is unsupported and will be removed in the future
+	// we do not tag it anymore
+    new func;
+    GetTrieValue(trie,"func", func);
     new Handle:plugin;
     GetTrieValue(trie,"plugin",plugin);
     
@@ -269,7 +264,7 @@ public OnSocketDisconnected(Handle:socket, any:trie) {
     CloseHandle(trie);
     trieCount--;
     
-    Call_StartFunction(plugin,func);
+    Call_StartFunction(plugin,Function:func);
     Call_PushCell(index>=0?1:0);
     Call_PushCell(0);
     Call_PushString(exploded[1]);
@@ -297,19 +292,6 @@ public OnSocketError(Handle:socket, const errorType, const errorNum, any:trie) {
     SetTrieString(trie,"response","");
     FrontInsertQueue(trie);
     backoffcounter+=5;
-/*    new Function:func;
-    GetTrieValue(trie,"func",func);
-    new Handle:plugin;
-    GetTrieValue(trie,"plugin",plugin);
-    
-    
-    CloseHandle(trie);
-    trieCount--;
-    
-    Call_StartFunction(plugin,func);
-    Call_PushCell(0);
-    Call_PushCell(1);
-    Call_Finish(dummy);*/
     
 }
 FrontInsertQueue(Handle:trie)

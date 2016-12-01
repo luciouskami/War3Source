@@ -268,10 +268,18 @@ War3_TriedToBuyItem(client, item, bool:reshowmenu=true)
         }
         else if(currency < cost) 
         {
+            new bool:useCategory = GetConVarBool(hUseCategorysCvar);
             War3_ChatMessage(client, "%T", "You cannot afford {itemname}", GetTrans(), itemname);
             if(reshowmenu) 
             {
-                ShowMenuShop(client);
+                if (useCategory)
+                {
+                     ShowMenuShopCategory(client);
+                }
+                else
+                {
+                     ShowMenuShop(client);
+                }
             }
             bCanBuy = false;
         }
@@ -303,11 +311,11 @@ War3_TriedToBuyItem(client, item, bool:reshowmenu=true)
 
             if (IsPlayerAlive(client))
             {
-                EmitSoundToAll(sBuyItemSound, client);
+                EmitSoundToAllAny(sBuyItemSound, client);
             }
             else
             {
-                EmitSoundToClient(client, sBuyItemSound);
+                EmitSoundToClientAny(client, sBuyItemSound);
             }
             
             W3SetVar(TheItemBoughtOrLost,item);

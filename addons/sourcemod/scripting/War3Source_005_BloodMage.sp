@@ -99,9 +99,9 @@ public OnPluginStart()
     hrevivalDelayCvar=CreateConVar("war3_mage_revive_delay","2.0","Delay when reviving a teammate (since death)");
     
     MoneyOffsetCS=FindSendPropInfo("CCSPlayer","m_iAccount");
-    MyWeaponsOffset=FindSendPropOffs("CBaseCombatCharacter","m_hMyWeapons");
-//    Clip1Offset=FindSendPropOffs("CBaseCombatWeapon","m_iClip1");
-    AmmoOffset=FindSendPropOffs("CBasePlayer","m_iAmmo");
+    MyWeaponsOffset=FindSendPropInfo("CBaseCombatCharacter","m_hMyWeapons");
+//    Clip1Offset=FindSendPropInfo("CBaseCombatWeapon","m_iClip1");
+    AmmoOffset=FindSendPropInfo("CBasePlayer","m_iAmmo");
     
     if(War3_GetGame()==Game_TF)
     {
@@ -137,15 +137,24 @@ public OnMapStart()
     HaloSprite=War3_PrecacheHaloSprite();
     //we gonna use theese bloodsprite as "money blood"(change color)
     BloodSpray = PrecacheModel("sprites/bloodspray.vmt");
-    if(War3_GetGame() == Game_CSGO) {
+    
+    if(GAMETF) {
+        PrecacheSoundAny("weapons/explode1.wav",false);
+    } else if(GAMECSGO) {
         BloodDrop = PrecacheModel("decals/blood1.vmt");
         FireSprite     = PrecacheModel("materials/sprites/glow07.vmt");
-        War3_PrecacheParticle("weapon_molotov_thrown_glow");
-        War3_PrecacheParticle("burning_character");
+        War3_PrecacheParticle("molotov_explosion");
+        PrecacheSoundAny("weapons/incgrenade/inc_grenade_detonate_swt_01.wav",false);
     }
     else {
+        // CS:S and other games that share these assets
         BloodDrop = PrecacheModel("sprites/blood.vmt");
         FireSprite     = PrecacheModel("materials/sprites/fireburst.vmt");
+        PrecacheSoundAny("weapons/explode5.wav",false);
+        if(GAMECS) {
+            // This is CS:S only
+            War3_PrecacheParticle("env_fire_medium_smoke");
+        }
     }
     
     War3_AddCustomSound(reviveSound);
@@ -248,26 +257,30 @@ public OnUltimateCommand(client,race,bool:pressed)
                     PrintHintText(client,"%T","Flame Strike!",client);
                     PrintHintText(target,"%T","You have been struck with Flame Strike!",target);
                     W3SetPlayerColor(target,thisRaceID,255,128,0,_,GLOW_ULTIMATE);
-                    new Float:effect_vec[3];
-                    GetClientAbsOrigin(target,effect_vec);
+                    decl Float:effect_vec[3];
+                    GetClientAbsOrigin(target, effect_vec);
                     effect_vec[2]+=150.0;
                     TE_SetupGlowSprite(effect_vec, FireSprite, 2.0, 4.0, 255);
                     TE_SendToAll();
-                    if(War3_GetGame()!=Game_CSGO) {
-                        TE_SetupGlowSprite(effect_vec, FireSprite, 4.0, 3.0, 255);
-                        TE_SendToAll();
-                    }
-                    else {
-                        effect_vec[2]-=180;
-                        ThrowAwayParticle("weapon_molotov_thrown_glow", effect_vec, 3.5);
-                        AttachParticle(target, "burning_character", effect_vec, "rfoot");
-                        effect_vec[2]+=180;
-                    }
-                    if(War3_GetGame()==Game_CS) {
+                    if(GAMECSGO) {
+                        decl Float:effect_angles[3];
+                        GetClientEyeAngles(target, effect_angles);
+                        effect_angles[0]=-90.0;
+                        effect_vec[2]-=130;
+                        ThrowAwayParticle("molotov_explosion", effect_vec, 3.5, effect_angles);
+                    } else if(GAMECS) {
                         //I'm unsure about how it works in other games than cs:source
                         effect_vec[2]-180;
                         new ent = AttachParticle(target, "env_fire_medium_smoke", effect_vec, "rfoot");
                         FireEntityEffect[target]=ent;
+                    }
+                    
+                    if(GAMECSGO) {
+                        EmitSoundToAllAny("weapons/incgrenade/inc_grenade_detonate_swt_01.wav", target);
+                    } else if(GAMETF) {
+                        EmitSoundToAllAny("weapons/explode1.wav", target);
+                    } else {
+                        EmitSoundToAllAny("weapons/explode5.wav", target);
                     }
                 }
                 else
@@ -311,10 +324,13 @@ public Action:BurnLoop(Handle:timer,any:userid)
         if(BurnsRemaining[victim]<=0)
         {
             W3ResetPlayerColor(victim,thisRaceID);
-            if (IsValidEdict(FireEntityEffect[victim]))
+            if(War3_GetGame()==Game_CS)
             {
-                AcceptEntityInput(FireEntityEffect[victim], "Kill");
-                FireEntityEffect[victim]=-1;
+                if (FireEntityEffect[victim] > 0 && IsValidEdict(FireEntityEffect[victim]))
+                {
+                    AcceptEntityInput(FireEntityEffect[victim], "Kill");
+                    FireEntityEffect[victim]=-1;
+                }
             }
         } 
     }
@@ -488,11 +504,6 @@ public OnW3TakeDmgBullet(victim,attacker,Float:damage)
 }
 
 stock siphonsfx(victim) {
-    if(RaceDisabled)
-    {
-        return;
-    }
-
     decl Float:vecAngles[3];
     GetClientEyeAngles(victim,vecAngles);
     decl Float:target_pos[3];
@@ -503,22 +514,17 @@ stock siphonsfx(victim) {
 }
 
 stock respawnsfx(target) {
-    if(RaceDisabled)
-    {
-        return;
-    }
-
-    new Float:effect_vec[3];
+    decl Float:effect_vec[3];
     GetClientAbsOrigin(target,effect_vec);
-    effect_vec[2]+=15.0;
-    TE_SetupBeamRingPoint(effect_vec,60.0,1.0,BeamSprite,HaloSprite,0,15,1.5,8.0,1.0,{255,255,20,255},10,0);
+    effect_vec[2]+=50.0;
+    TE_SetupBeamRingPoint(effect_vec,80.0,1.0,BeamSprite,HaloSprite,0,15,1.0,8.0,1.0,{255,255,20,255},10,0);
     TE_SendToAll();
-    effect_vec[2]+=15.0;
-    TE_SetupBeamRingPoint(effect_vec,60.0,1.0,BeamSprite,HaloSprite,0,15,1.5,8.0,1.0,{255,255,20,255},10,0);
-    TE_SendToAll();
-    effect_vec[2]+=15.0;
-    TE_SetupBeamRingPoint(effect_vec,60.0,1.0,BeamSprite,HaloSprite,0,15,1.5,8.0,1.0,{255,255,20,255},10,0);
-    TE_SendToAll();
+    effect_vec[2]-=15.0;
+    TE_SetupBeamRingPoint(effect_vec,60.0,1.0,BeamSprite,HaloSprite,0,15,1.0,8.0,1.0,{255,255,20,255},10,0);
+    TE_SendToAll(0.3);
+    effect_vec[2]-=15.0;
+    TE_SetupBeamRingPoint(effect_vec,40.0,1.0,BeamSprite,HaloSprite,0,15,1.0,8.0,1.0,{255,255,20,255},10,0);
+    TE_SendToAll(0.6);
 }
 
 // Events
@@ -656,7 +662,6 @@ public Action:DoRevival(Handle:timer,any:userid)
                 
                 testhull(client);
                 
-                
                 fLastRevive[client]=GetGameTime();
                 //test noclip method
                 
@@ -747,10 +752,13 @@ public PlayerDeathEvent(Handle:event,const String:name[],bool:dontBroadcast)
         new victimTeam = GetClientTeam(victim);
         new skillevel;
         
-        if (IsValidEdict(FireEntityEffect[victim]))
+        if(War3_GetGame()==Game_CS)
         {
-            AcceptEntityInput(FireEntityEffect[victim], "TurnOff");
-            FireEntityEffect[victim]=-1;
+            if (FireEntityEffect[victim] > 0 && IsValidEdict(FireEntityEffect[victim]))
+            {
+                AcceptEntityInput(FireEntityEffect[victim], "TurnOff");
+                FireEntityEffect[victim]=-1;
+            }
         }
         
         new deathFlags = GetEventInt(event, "death_flags");
@@ -797,7 +805,8 @@ public PlayerDeathEvent(Handle:event,const String:name[],bool:dontBroadcast)
                                     PrintCenterText(victim,"PREPARE FOR RESPAWN!");
                                     War3_ChatMessage(victim,"PREPARE FOR RESPAWN!");
                                 }
-                                CreateTimer(GetConVarFloat(hrevivalDelayCvar),DoRevival,GetClientUserId(victim));
+                                
+                                CreateTimer(GetConVarFloat(hrevivalDelayCvar), DoRevival, GetClientUserId(victim));
                                 break;
                             }
                         }
@@ -827,7 +836,7 @@ public Action:Unbanish(Handle:timer,any:userid)
 
 new absincarray[]={0,4,-4,8,-8,12,-12,18,-18,22,-22,25,-25,27,-27,30,-30};//,33,-33,40,-40};
 
-public bool:testhull(client){
+stock bool:testhull(client){
     if(RaceDisabled)
     {
         return;

@@ -31,6 +31,14 @@ enum {
     ITEM_LAST, // Not a real item, just the last item in the enum!
 }
 
+enum roundState {
+    RS_Pre,
+    RS_First,
+    RS_Normal
+}
+
+new roundState:rsRoundState = RS_Pre;
+
 new iShopitem[ITEM_LAST];
 new iTomeSoundDelay[MAXPLAYERSCUSTOM];
 
@@ -61,14 +69,17 @@ public OnPluginStart()
     {
         SetFailState("Not compatible with the Left4Dead games");
     }
-    
     if(GameCSANY())
     {
         HookEvent("round_start", Event_RoundStart);
     }
+    if(GAMECSGO)
+    {
+        HookEvent("announce_phase_end", Event_StartHalftime);
+    }
 
-    iOriginOffset = FindSendPropOffs("CBaseEntity", "m_vecOrigin");
-    iMyWeaponsOffset = FindSendPropOffs("CBaseCombatCharacter", "m_hMyWeapons");
+    iOriginOffset = FindSendPropInfo("CBaseEntity", "m_vecOrigin");
+    iMyWeaponsOffset = FindSendPropInfo("CBaseCombatCharacter", "m_hMyWeapons");
     
     hBootsSpeedCvar = CreateConVar("war3_shop_boots_speed", "1.2", "Boots speed, 1.2 is default");
     hClawsDamageCvar = CreateConVar("war3_shop_claws_damage", GameTF() ? "10" : "6", "Claws of attack additional damage per bullet (CS) or per second (TF)");
@@ -139,7 +150,7 @@ public OnMapStart()
 {
     War3_AddSoundFolder(sBuyTomeSound, sizeof(sBuyTomeSound), "tomes.mp3");
     War3_AddCustomSound(sBuyTomeSound);
-    
+    rsRoundState = RS_First;
     if(GAMECSGO)
     {
         // These models aren't always precached
@@ -177,9 +188,20 @@ public OnWar3EventDeath(client)
         }
     }
 }
-
+public Event_StartHalftime(Handle:event, const String:name[], bool:dontBroadcast)
+{
+    rsRoundState = RS_Pre;
+}
 public Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
+    if(rsRoundState == RS_Pre)
+    {
+        rsRoundState = RS_First;
+    }
+    else if(rsRoundState == RS_First)
+    {
+        rsRoundState = RS_Normal;
+    }
     if(!GetConVarBool(hMoleDeathmatchAllowedCvar))
     {
         for(new x=1; x <= MaxClients; x++)
@@ -214,7 +236,7 @@ public OnWar3EventSpawn(client)
     if(GAMECSANY && 
        War3_GetOwnsItem(client, iShopitem[ITEM_ANKH]) && bDidDie[client])
     {
-        if(!bSpawnedViaScrollRespawn[client])
+        if(!bSpawnedViaScrollRespawn[client] && rsRoundState == RS_Normal)
         { 
             //only if he didnt already respawn from the "respawn item" cuz that gives items too
             CreateTimer(0.1, DoAnkhAction, client);
@@ -363,11 +385,11 @@ public OnItemPurchase(client,item)
         {
             if (IsPlayerAlive(client))
             {
-                EmitSoundToAll(sBuyTomeSound, client);
+                EmitSoundToAllAny(sBuyTomeSound, client);
             }
             else
             {
-                EmitSoundToClient(client, sBuyTomeSound);
+                EmitSoundToClientAny(client, sBuyTomeSound);
             }
             
             War3_TrackDelay(iTomeSoundDelay[client], 0.25);
@@ -524,11 +546,6 @@ public Action:DoMole(Handle:timer, any:client)
         new ent = INVALID_ENT_REFERENCE;
         while((ent = FindEntityByClassname(ent, (iEnemyTeam == TEAM_T) ? "info_player_terrorist" : "info_player_counterterrorist")) != INVALID_ENT_REFERENCE)
         {
-            if(!IsValidEdict(ent)) 
-            {
-                continue;
-            }
-            
             GetEntDataVector(ent, iOriginOffset, fSpawnPosition);
 
             new bool:bIsConflicting = false;

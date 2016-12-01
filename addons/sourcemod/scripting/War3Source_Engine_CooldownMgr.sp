@@ -12,7 +12,6 @@ new bool:CooldownOnSpawn[MAXRACES][MAXSKILLCOUNT];
 new bool:CdOnSpawnPrintOnExpire[MAXRACES][MAXSKILLCOUNT];
 new Float:CooldownOnSpawnDuration[MAXRACES][MAXSKILLCOUNT];
 
-new String:sHintSound[256];
 new String:ultimateReadySound[256];
 new String:abilityReadySound[256];
 
@@ -46,6 +45,7 @@ public OnPluginStart()
 }
 public OnMapStart()
 {
+    new String:sHintSound[256];
     War3_AddSoundFolder(ultimateReadySound, sizeof(ultimateReadySound), "ult_ready.mp3");
     War3_AddSoundFolder(abilityReadySound, sizeof(abilityReadySound), "ability_refresh.mp3");
     War3_GetHintSound(sHintSound, sizeof(sHintSound));
@@ -54,7 +54,9 @@ public OnMapStart()
         expireTime[i]=0.0;
     }
     
-    War3_AddCustomSound(sHintSound);
+    if(sHintSound[0] != '\0') {
+        War3_AddCustomSound(sHintSound);
+    }
     War3_AddCustomSound(abilityReadySound);
     War3_AddCustomSound(ultimateReadySound);
 
@@ -399,7 +401,7 @@ CooldownExpired(i,bool:expiredByTimer)
                 W3Hint(client,HINT_COOLDOWN_EXPIRED,4.0,str);
                 W3Hint(client,HINT_COOLDOWN_NOTREADY,0.0,""); //if something is ready, force erase the not ready
             
-                EmitSoundToAll( War3_IsSkillUltimate(raceid,skillNum)?ultimateReadySound:abilityReadySound , client);
+                EmitSoundToAllAny( War3_IsSkillUltimate(raceid,skillNum)?ultimateReadySound:abilityReadySound , client);
             }
         }
     }

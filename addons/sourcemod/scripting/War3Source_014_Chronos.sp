@@ -73,21 +73,16 @@ public OnPluginStart()
 {
     ultCooldownCvar=CreateConVar("war3_chronos_ult_cooldown","20");
     
-    m_vecVelocity_0 = FindSendPropOffs("CBasePlayer","m_vecVelocity[0]");
-    m_vecVelocity_1 = FindSendPropOffs("CBasePlayer","m_vecVelocity[1]");
-    m_vecBaseVelocity = FindSendPropOffs("CBasePlayer","m_vecBaseVelocity");
+    m_vecVelocity_0 = FindSendPropInfo("CBasePlayer","m_vecVelocity[0]");
+    m_vecVelocity_1 = FindSendPropInfo("CBasePlayer","m_vecVelocity[1]");
+    m_vecBaseVelocity = FindSendPropInfo("CBasePlayer","m_vecBaseVelocity");
     
     if(GAMECSANY){
         HookEvent("player_jump",PlayerJumpEvent);
     }
-    RegConsoleCmd("bashme",Cmdbashme);
     LoadTranslations("w3s.race.chronos.phrases.txt");
 }
-public Action:Cmdbashme(client,args){
-    static bool:foo=false;
-    War3_SetBuff(client,bStunned,thisRaceID,foo);
-    foo=(!foo);
-}
+
 new glowsprite;
 public OnMapStart()
 {
@@ -330,7 +325,7 @@ public Action:sphereLoop(Handle:h,any:client){
                     CreateTimer(SphereEndTime[client]-GetGameTime(),unBashUlt,i);
                     War3_SetBuff(i,bBashed,thisRaceID,true);
                     
-                    if(War3_GetGame()==CS){
+                    if(GAMECSANY){
                         FakeClientCommand(i,"use weapon_knife");
                     }
                     else{
@@ -384,51 +379,30 @@ public OnW3TakeDmgAllPre(victim,attacker,Float:damage){
         return;
     }
 
-    if(bTrapped[victim]){ ///trapped people can only be damaged with knife
-        if(ValidPlayer(attacker,true)){
+    if(IS_PLAYER(victim) && bTrapped[victim]){ ///trapped people can only be damaged with knife
+        if(ValidPlayer(attacker)){
             new wpnent = W3GetCurrentWeaponEnt(attacker);
-            if(wpnent>0&&IsValidEdict(wpnent)){
-                decl String:WeaponName[32];
-                GetEdictClassname(wpnent, WeaponName, 32);
-                if(StrContains(WeaponName,"weapon_knife",false)<0&&!W3IsDamageFromMelee(WeaponName)){
-                    
-                    //PrintToChatAll("block");
-                    War3_DamageModPercent(0.0);
-                }
-            }
-            else{
-                PrintToChatAll("chronosblock no wpn detected");
+            if(!War3_IsMeleeWeapon(wpnent)){
                 War3_DamageModPercent(0.0);
+                return;
             }
-        }
-        else{
-            //PrintToChatAll("chronosblock no valid attacker");
-            //War3_DamageModPercent(0.0);
-            //some damage burn here? allow
+        } else {
+            War3_DamageModPercent(0.0);
+            return;
         }
     }
-    if(ValidPlayer(attacker)&&bTrapped[attacker]){ //trapped people can only use knife
-        if(War3_GetGame()==CS){
-            new wpnent = W3GetCurrentWeaponEnt(attacker);
-            if(wpnent>0&&IsValidEdict(wpnent)){
-                decl String:WeaponName[32];
-                GetEdictClassname(wpnent, WeaponName, 32);
-                if(StrContains(WeaponName,"weapon_knife",false)<0){
-                    
-                    PrintHintText(attacker,"%T","You can only damage with knife",attacker);
-                    War3_DamageModPercent(0.0);
-                }
-            }
-            else{
-                PrintToChatAll("chronosblock no wpn detected2");
-                War3_DamageModPercent(0.0);
-            }
+    if(ValidPlayer(attacker) && bTrapped[attacker]){ //trapped people can only use knife
+        new wpnent = W3GetCurrentWeaponEnt(attacker);
+        if(!War3_IsMeleeWeapon(wpnent)){
+            PrintHintText(attacker,"%T","You can only damage with knife",attacker);
+            War3_DamageModPercent(0.0);
+            return;
         }
     }
     if(ValidPlayer(attacker,true)&&IsInOwnSphere(victim)&&!bTrapped[attacker]&&!W3HasImmunity(attacker,Immunity_Ultimates)){ //cant shoot to inside the sphere    
-        War3_DamageModPercent(0.0);    
+        War3_DamageModPercent(0.0);
     }
-    if(ValidPlayer(attacker,true)&&IsInOwnSphere(attacker)&&!bTrapped[victim]){    //cant shoot outside of your sphere
+    else if(ValidPlayer(attacker,true)&&IsInOwnSphere(attacker)&&!bTrapped[victim]){    //cant shoot outside of your sphere
         War3_DamageModPercent(0.0);    
     }
 }

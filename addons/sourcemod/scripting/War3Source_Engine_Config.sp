@@ -81,10 +81,10 @@ public OnWar3PluginReady()
     War3_SetRaceGlobalConfigString("restricted_hugalug","None");
     War3_SetRaceGlobalConfigString("restricted_blah","Some");
     War3_SetRaceGlobalConfigString("restricted_blah23","Some");
-    ReloadConfig();
+    //ReloadConfig();
 }
 
-ReloadConfig()
+stock ReloadConfig()
 {
     if(g_hActualRaceValues != INVALID_HANDLE) 
     {
@@ -743,7 +743,7 @@ GetRealNativeStringLength(index, &length)
     length++;
 }
 
-KvMergeSubkeys(Handle:origin, Handle:dest)
+stock KvMergeSubkeys(Handle:origin, Handle:dest)
 {
     new String:section[256];
     do

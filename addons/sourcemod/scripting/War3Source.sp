@@ -172,14 +172,14 @@ public APLRes:AskPluginLoad2Custom(Handle:myself,bool:late,String:error[],err_ma
 
     new String:version[64];
     Format(version, sizeof(version), "%s by the War3Source Team", VERSION_NUM);
-    CreateConVar("war3_version", version, "War3Source version.", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-    CreateConVar("a_war3_version", version, "War3Source version.", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-    CreateConVar("war3_branch", BRANCH, "War3Source branch.", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-    CreateConVar("war3_buildnumber", BUILD_NUMBER, "War3Source build number.", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
-    CreateConVar("war3_release", RELEASE_DATE, "War3Source version release date.", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("war3_version", version, "War3Source version.", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("a_war3_version", version, "War3Source version.", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("war3_branch", BRANCH, "War3Source branch.", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("war3_buildnumber", BUILD_NUMBER, "War3Source build number.", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+    CreateConVar("war3_release", RELEASE_DATE, "War3Source version release date.", FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 
     CreateNative("W3GetW3Version", NW3GetW3Version);
-    CreateNative("W3GetW3Revision", NW3GetW3Revision);
+    CreateNative("W3GetW3Revision", NW3GetW3Revision);  
 
     if(!War3Source_InitForwards())
     {
@@ -390,12 +390,6 @@ public War3Source_PlayerSpawnEvent(Handle:event,const String:name[],bool:dontBro
         War3_SetMaxHP_INTERNAL(client, GetClientHealth(client));
 
         CheckPendingRace(client);
-
-        //W3IsPlayerXPLoaded(client) is for skipping until putin server is fired (which cleared variables)
-        if(IsFakeClient(client) && W3IsPlayerXPLoaded(client) && War3_GetRace(client) == 0)
-        {
-            War3_bots_pickrace(client);
-        }
 
         new raceid = War3_GetRace(client);
         if(!W3GetPlayerProp(client, SpawnedOnce))

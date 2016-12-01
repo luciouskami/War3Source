@@ -84,10 +84,10 @@ public OnPluginStart()
     ultCooldownCvar=CreateConVar("war3_warden_vengence_cooldown","20","Cooldown between Warden Vengence (ultimate)");
     
     CreateTimer(0.2,CalcBlink,_,TIMER_REPEAT);
-    OriginOffset=FindSendPropOffs("CBaseEntity","m_vecOrigin");
-    MyWeaponsOffset=FindSendPropOffs("CBaseCombatCharacter","m_hMyWeapons");
-    //Clip1Offset=FindSendPropOffs("CBaseCombatWeapon","m_iClip1");
-    AmmoOffset=FindSendPropOffs("CBasePlayer","m_iAmmo");
+    OriginOffset=FindSendPropInfo("CBaseEntity","m_vecOrigin");
+    MyWeaponsOffset=FindSendPropInfo("CBaseCombatCharacter","m_hMyWeapons");
+    //Clip1Offset=FindSendPropInfo("CBaseCombatWeapon","m_iClip1");
+    AmmoOffset=FindSendPropInfo("CBasePlayer","m_iAmmo");
     
     if(GAMECSANY){
         HookEvent("player_death",PlayerDeathEvent);
@@ -410,7 +410,6 @@ public Action:DoMole(Handle:timer,any:client)
         new ent=-1;
         while((ent = FindEntityByClassname(ent,(searchteam==2)?"info_player_terrorist":"info_player_counterterrorist"))!=-1)
         {
-            if(!IsValidEdict(ent)) continue;
             GetEntDataVector(ent,OriginOffset,spawnloc);
             
             new bool:is_conflict=false;

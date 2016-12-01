@@ -46,18 +46,20 @@ public OnPluginStart()
 public OnMapStart()
 {
     War3_AddSoundFolder(beamsnd, sizeof(beamsnd), "moonqueen/beam.mp3");
-    War3_AddSoundFolder(lunasnd2, sizeof(lunasnd2), "flashbang_explode2.mp3");
-
-    War3_AddCustomSound( beamsnd );
     if(GameCS()) {
-
-        War3_AddCustomSound( lunasnd2 );
+        War3_AddSoundFolder(lunasnd2, sizeof(lunasnd2), "flashbang_explode2.mp3");
+    } else {
+        War3_AddSoundFolder(lunasnd2, sizeof(lunasnd2), "moonqueen/flashbang_explode1.mp3");
     }
+    
+    War3_AddCustomSound( beamsnd );
+    War3_AddCustomSound( lunasnd2 );
+    
     //BeamSprite=War3_PrecacheBeamSprite();
     HaloSprite=War3_PrecacheHaloSprite();
     if(War3_GetGame() == Game_CSGO) {
-        CoreSprite = PrecacheModel( "effects/combinemuzzle1.vmt" );
-        MoonSprite = PrecacheModel( "particle/particle_glow_01" );
+        CoreSprite = PrecacheModel( "materials/effects/combinemuzzle1.vmt" );
+        MoonSprite = PrecacheModel( "materials/sprites/light_glow02.vmt" );
         XBeamSprite = PrecacheModel( "materials/sprites/physbeam.vmt" );
         //PrecacheModel("particle/particle_flares/particle_flare_004");
     }
@@ -175,10 +177,8 @@ public OnW3TakeDmgBullet( victim, attacker, Float:damage )
                             }
                         }
                     }
-                    if(GameCS()) {
-                        EmitSoundToAll(lunasnd2,victim);
-                        EmitSoundToAll(lunasnd2,attacker);
-                    }
+                    EmitSoundToAllAny(lunasnd2,victim);
+                    EmitSoundToAllAny(lunasnd2,attacker);
                 }
             }
 
@@ -298,7 +298,7 @@ MoonBeamDamageAndEffect(victim, attacker, min, max) {
     War3_DealDamage(victim, GetRandomInt(min, max), attacker ,DMG_FALL, "lucentbeam");
     W3PrintSkillDmgHintConsole(victim, attacker, War3_GetWar3DamageDealt(), SKILL_MOONBEAM);
 
-    EmitSoundToAll(beamsnd, victim);
-    EmitSoundToAll(beamsnd, attacker);
+    EmitSoundToAllAny(beamsnd, victim);
+    EmitSoundToAllAny(beamsnd, attacker);
 
 }
